@@ -48,7 +48,7 @@ describe("FedaPayClient — constructeur", () => {
   });
 });
 
-describe("FedaPayClient — getTransaction", () => {
+describe("FedaPayClient — transactions.get", () => {
   beforeEach(() => { mockFetch.mockClear(); });
 
   it("retourne la transaction mappée en camelCase", async () => {
@@ -57,7 +57,7 @@ describe("FedaPayClient — getTransaction", () => {
     );
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    const tx = await client.getTransaction(1);
+    const tx = await client.transactions.get(1);
 
     expect(tx.id).toBe(1);
     expect(tx.reference).toBe("ref_001");
@@ -71,8 +71,8 @@ describe("FedaPayClient — getTransaction", () => {
     mockFetch.mockResolvedValueOnce(mockResponse({}));
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    await expect(client.getTransaction(1)).rejects.toThrow(
-      "FedaPay getTransaction: unexpected response",
+    await expect(client.transactions.get(1)).rejects.toThrow(
+      "FedaPay transactions.get: unexpected response",
     );
   });
 
@@ -80,11 +80,11 @@ describe("FedaPayClient — getTransaction", () => {
     mockFetch.mockResolvedValueOnce(mockResponse({ message: "Not found" }, 404));
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    await expect(client.getTransaction(999)).rejects.toThrow("404");
+    await expect(client.transactions.get(999)).rejects.toThrow("404");
   });
 });
 
-describe("FedaPayClient — listTransactions", () => {
+describe("FedaPayClient — transactions.list", () => {
   beforeEach(() => { mockFetch.mockClear(); });
 
   it("retourne la liste et les métadonnées", async () => {
@@ -96,7 +96,7 @@ describe("FedaPayClient — listTransactions", () => {
     );
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    const result = await client.listTransactions();
+    const result = await client.transactions.list();
 
     expect(result.transactions).toHaveLength(1);
     expect(result.transactions[0].id).toBe(1);
@@ -112,7 +112,7 @@ describe("FedaPayClient — listTransactions", () => {
     );
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    await client.listTransactions({ page: 2, perPage: 10 });
+    await client.transactions.list({ page: 2, perPage: 10 });
 
     const url = (mockFetch.mock.calls[0] as [string])[0];
     expect(url).toContain("/transactions/search");
@@ -124,13 +124,13 @@ describe("FedaPayClient — listTransactions", () => {
     mockFetch.mockResolvedValueOnce(mockResponse({}));
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    await expect(client.listTransactions()).rejects.toThrow(
-      "FedaPay listTransactions: unexpected response",
+    await expect(client.transactions.list()).rejects.toThrow(
+      "FedaPay transactions.list: unexpected response",
     );
   });
 });
 
-describe("FedaPayClient — createPaymentToken", () => {
+describe("FedaPayClient — transactions.createPaymentToken", () => {
   beforeEach(() => { mockFetch.mockClear(); });
 
   it("retourne le token et le paymentUrl", async () => {
@@ -139,7 +139,7 @@ describe("FedaPayClient — createPaymentToken", () => {
     );
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    const result = await client.createPaymentToken(1);
+    const result = await client.transactions.createPaymentToken(1);
 
     expect(result.token).toBe("tok_abc");
     expect(result.paymentUrl).toBe("https://checkout.fedapay.com/pay/tok_abc");
@@ -149,8 +149,8 @@ describe("FedaPayClient — createPaymentToken", () => {
     mockFetch.mockResolvedValueOnce(mockResponse({ token: "tok_abc" }));
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
-    await expect(client.createPaymentToken(1)).rejects.toThrow(
-      "FedaPay createPaymentToken: unexpected response",
+    await expect(client.transactions.createPaymentToken(1)).rejects.toThrow(
+      "FedaPay transactions.createPaymentToken: unexpected response",
     );
   });
 });

@@ -23,10 +23,12 @@ const client = new FedaPayClient({
 });
 ```
 
-### Créer une transaction
+### Transactions
+
+#### Créer une transaction
 
 ```ts
-const { transactionId, paymentUrl } = await client.createTransaction({
+const { transactionId, paymentUrl } = await client.transactions.create({
   amount: 5000,
   currency: "XOF", // par défaut
   description: "Commande #42",
@@ -40,19 +42,19 @@ const { transactionId, paymentUrl } = await client.createTransaction({
 // Rediriger le client vers paymentUrl pour effectuer le paiement
 ```
 
-### Récupérer une transaction
+#### Récupérer une transaction
 
 ```ts
-const transaction = await client.getTransaction(transactionId);
+const transaction = await client.transactions.get(transactionId);
 
 console.log(transaction.status);    // "pending" | "approved" | "declined" | ...
 console.log(transaction.paymentUrl);
 ```
 
-### Lister les transactions
+#### Lister les transactions
 
 ```ts
-const { transactions, meta } = await client.listTransactions({ page: 1, perPage: 25 });
+const { transactions, meta } = await client.transactions.list({ page: 1, perPage: 25 });
 
 console.log(`${meta.total} transactions — page ${meta.currentPage}/${meta.totalPages}`);
 
@@ -61,12 +63,12 @@ for (const tx of transactions) {
 }
 ```
 
-### Générer un lien de paiement (token)
+#### Générer un lien de paiement (token)
 
 Utile pour générer un nouveau lien sur une transaction existante.
 
 ```ts
-const { token, paymentUrl } = await client.createPaymentToken(transactionId);
+const { token, paymentUrl } = await client.transactions.createPaymentToken(transactionId);
 ```
 
 ### Vérifier la signature d'un webhook
@@ -100,13 +102,13 @@ const isValid = verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
 
 ### `new FedaPayClient(config)`
 
-| Paramètre        | Type                   | Requis | Description                          |
-| ---------------- | ---------------------- | ------ | ------------------------------------ |
-| `secretKey`      | `string`               | Oui    | Clé secrète FedaPay (`sk_live_...`)  |
-| `environment`    | `"sandbox" \| "live"` | Non    | `"sandbox"` par défaut               |
-| `webhookSecret`  | `string`               | Non    | Secret pour valider les webhooks     |
+| Paramètre       | Type                  | Requis | Description                         |
+| --------------- | --------------------- | ------ | ----------------------------------- |
+| `secretKey`     | `string`              | Oui    | Clé secrète FedaPay (`sk_live_...`) |
+| `environment`   | `"sandbox" \| "live"` | Non    | `"sandbox"` par défaut              |
+| `webhookSecret` | `string`              | Non    | Secret pour valider les webhooks    |
 
-### `client.createTransaction(input)`
+### `client.transactions.create(input)`
 
 | Paramètre           | Type                     | Requis | Description                   |
 | ------------------- | ------------------------ | ------ | ----------------------------- |
@@ -121,33 +123,33 @@ const isValid = verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
 
 Retourne `{ transactionId: string, paymentUrl: string }`.
 
-### `client.getTransaction(id)`
+### `client.transactions.get(id)`
 
 Récupère une transaction par son ID. Retourne un objet `Transaction` :
 
-| Champ         | Type                | Description                                              |
-| ------------- | ------------------- | -------------------------------------------------------- |
-| `id`          | `number`            | Identifiant unique                                       |
-| `reference`   | `string`            | Référence FedaPay                                        |
-| `amount`      | `number`            | Montant                                                  |
+| Champ         | Type                | Description                                                                         |
+| ------------- | ------------------- | ----------------------------------------------------------------------------------- |
+| `id`          | `number`            | Identifiant unique                                                                  |
+| `reference`   | `string`            | Référence FedaPay                                                                   |
+| `amount`      | `number`            | Montant                                                                             |
 | `status`      | `TransactionStatus` | `pending` \| `approved` \| `declined` \| `canceled` \| `refunded` \| `transferred` |
-| `description` | `string`            | Description                                              |
-| `callbackUrl` | `string \| null`    | URL de retour                                            |
-| `paymentUrl`  | `string \| null`    | Lien de paiement                                         |
-| `mode`        | `string \| null`    | Méthode de paiement utilisée                             |
-| `createdAt`   | `string`            | Date de création (ISO 8601)                              |
-| `updatedAt`   | `string`            | Date de mise à jour (ISO 8601)                           |
+| `description` | `string`            | Description                                                                         |
+| `callbackUrl` | `string \| null`    | URL de retour                                                                       |
+| `paymentUrl`  | `string \| null`    | Lien de paiement                                                                    |
+| `mode`        | `string \| null`    | Méthode de paiement utilisée                                                        |
+| `createdAt`   | `string`            | Date de création (ISO 8601)                                                         |
+| `updatedAt`   | `string`            | Date de mise à jour (ISO 8601)                                                      |
 
-### `client.listTransactions(params?)`
+### `client.transactions.list(params?)`
 
-| Paramètre  | Type     | Description                   |
-| ---------- | -------- | ----------------------------- |
-| `page`     | `number` | Numéro de page (défaut : 1)   |
-| `perPage`  | `number` | Résultats par page (défaut : 25) |
+| Paramètre | Type     | Description                      |
+| --------- | -------- | -------------------------------- |
+| `page`    | `number` | Numéro de page (défaut : 1)      |
+| `perPage` | `number` | Résultats par page (défaut : 25) |
 
 Retourne `{ transactions: Transaction[], meta: ListMeta }` avec `meta` contenant `total`, `perPage`, `currentPage`, `totalPages`.
 
-### `client.createPaymentToken(id)`
+### `client.transactions.createPaymentToken(id)`
 
 Génère un token de paiement pour une transaction existante. Retourne `{ token: string, paymentUrl: string }`.
 
