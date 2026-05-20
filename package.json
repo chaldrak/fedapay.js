@@ -2,7 +2,7 @@
   "name": "fedapay.js",
   "version": "0.1.0",
   "description": "Zero-dependency TypeScript wrapper for the FedaPay API",
-  "keywords": ["fedapay", "payment", "benin", "west-africa", "typescript"],
+  "keywords": ["fedapay", "payment", "benin", "west-africa", "typescript", "mobile-money", "api"],
   "license": "MIT",
   "author": "chaldrakus@gmail.com",
   "repository": {
