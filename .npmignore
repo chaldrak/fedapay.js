@@ -1,0 +1,7 @@
+src/
+*.ts
+!dist/**/*.d.ts
+tsconfig*.json
+.github/
+.gitignore
+jest.config.*
