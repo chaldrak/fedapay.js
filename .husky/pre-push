@@ -1,0 +1,17 @@
+#!/bin/sh
+# Bloque le push d'un tag si la version ne correspond pas à package.json
+
+PKG_VERSION=$(node -p "require('./package.json').version")
+
+while read local_ref local_sha remote_ref remote_sha; do
+  if echo "$remote_ref" | grep -q "^refs/tags/v"; then
+    TAG_VERSION=$(echo "$remote_ref" | sed 's|refs/tags/v||')
+    if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+      echo ""
+      echo "✗ Le tag v$TAG_VERSION ne correspond pas à package.json (v$PKG_VERSION)"
+      echo "  Utilise: npm run release $TAG_VERSION"
+      echo ""
+      exit 1
+    fi
+  fi
+done
