@@ -4,4 +4,10 @@ export type {
   FedaPayConfig,
   CreateTransactionInput,
   CreateTransactionResult,
+  Transaction,
+  TransactionStatus,
+  ListTransactionsParams,
+  ListTransactionsResult,
+  ListMeta,
+  PaymentTokenResult,
 } from "./types.js";
