@@ -126,7 +126,7 @@ export class FedaPayClient {
     if (params?.perPage !== undefined) qs.set("per_page", String(params.perPage));
     const query = qs.size > 0 ? `?${qs}` : "";
 
-    const data = await this.#request(`/transactions${query}`);
+    const data = await this.#request(`/transactions/search${query}`);
 
     const txs = (
       data["v1/transactions"] ??

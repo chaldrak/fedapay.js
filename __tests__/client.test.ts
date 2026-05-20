@@ -115,6 +115,7 @@ describe("FedaPayClient — listTransactions", () => {
     await client.listTransactions({ page: 2, perPage: 10 });
 
     const url = (mockFetch.mock.calls[0] as [string])[0];
+    expect(url).toContain("/transactions/search");
     expect(url).toContain("page=2");
     expect(url).toContain("per_page=10");
   });
