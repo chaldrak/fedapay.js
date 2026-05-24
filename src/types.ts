@@ -65,6 +65,61 @@ export interface PaymentTokenResult {
   paymentUrl: string;
 }
 
+export interface PhoneNumber {
+  number: string;
+  /** Code pays ISO alpha-2, ex: "bj" pour le Bénin */
+  country: string;
+}
+
+export interface CreateCustomerInput {
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  phoneNumber?: PhoneNumber;
+}
+
+export interface UpdateCustomerInput {
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  phoneNumber?: PhoneNumber;
+}
+
+export interface Customer {
+  id: number;
+  firstname: string;
+  lastname: string;
+  fullName: string;
+  email: string | null;
+  phoneNumberId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface ListCustomersParams {
+  page?: number;
+  perPage?: number;
+}
+
+export interface ListCustomersResult {
+  customers: Customer[];
+  meta: ListMeta;
+}
+
+/** @internal */
+export interface FedaPayCustomerResponse {
+  id: number;
+  firstname: string;
+  lastname: string;
+  full_name: string;
+  email: string | null;
+  phone_number_id: number | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 /** @internal */
 export interface FedaPayTransactionResponse {
   id: number;

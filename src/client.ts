@@ -1,5 +1,6 @@
 import { verifyWebhookSignature } from "./webhook.js";
 import { TransactionsResource } from "./resources/transactions.js";
+import { CustomersResource } from "./resources/customers.js";
 import type { FedaPayConfig } from "./types.js";
 
 function getBaseUrl(env: "sandbox" | "live"): string {
@@ -13,6 +14,7 @@ export class FedaPayClient {
   readonly #webhookSecret: string | undefined;
   readonly #baseUrl: string;
   readonly transactions: TransactionsResource;
+  readonly customers: CustomersResource;
 
   constructor(config: FedaPayConfig) {
     if (!config.secretKey) {
@@ -22,6 +24,7 @@ export class FedaPayClient {
     this.#webhookSecret = config.webhookSecret;
     this.#baseUrl = getBaseUrl(config.environment ?? "sandbox");
     this.transactions = new TransactionsResource(this.#request.bind(this));
+    this.customers = new CustomersResource(this.#request.bind(this));
   }
 
   async #request(path: string, init?: RequestInit): Promise<Record<string, unknown>> {
@@ -41,6 +44,7 @@ export class FedaPayClient {
       );
     }
 
+    if (res.status === 204) return {};
     return res.json() as Promise<Record<string, unknown>>;
   }
 

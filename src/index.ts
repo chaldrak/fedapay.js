@@ -10,4 +10,10 @@ export type {
   ListTransactionsResult,
   ListMeta,
   PaymentTokenResult,
+  PhoneNumber,
+  CreateCustomerInput,
+  UpdateCustomerInput,
+  Customer,
+  ListCustomersParams,
+  ListCustomersResult,
 } from "./types.js";
