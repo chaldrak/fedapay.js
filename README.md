@@ -136,6 +136,8 @@ const webhook = await client.webhooks.create({
 
 // Récupérer
 const webhook = await client.webhooks.get(webhookId);
+console.log(webhook.eventTypes);
+// [{ id: 5, name: "transaction.approved" }, { id: 1, name: "customer.created" }]
 
 // Lister
 const { webhooks, meta } = await client.webhooks.list();
@@ -261,7 +263,7 @@ const isValid = verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
 | `enabled`         | `boolean`                | Activer/désactiver                               |
 | `sslVerify`       | `boolean`                | Vérification SSL                                 |
 | `disableOnError`  | `boolean`                | Désactivation automatique après échec            |
-| `eventTypeIds`    | `number[]`               | IDs des événements à recevoir (tous par défaut)  |
+| `eventTypeIds`    | `number[]`               | IDs des événements à recevoir (tous par défaut) — voir `listEventTypes()` |
 | `httpHeaders`     | `Record<string, string>` | Headers personnalisés ajoutés à chaque requête   |
 
 ### `client.balances`
