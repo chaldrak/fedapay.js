@@ -120,13 +120,17 @@ const { payouts, meta } = await client.payouts.list({ page: 1, perPage: 25 });
 ### Webhooks
 
 ```ts
+// Lister les types d'événements disponibles (pour connaître les IDs)
+const eventTypes = await client.webhooks.listEventTypes();
+// [{ id: 5, name: "transaction.approved" }, { id: 6, name: "transaction.declined" }, ...]
+
 // Créer
 const webhook = await client.webhooks.create({
   url: "https://monsite.com/webhook",
   enabled: true,
   sslVerify: true,
   disableOnError: false,
-  eventTypeIds: [5, 6, 7, 10],            // optionnel — tous les events par défaut
+  eventTypeIds: [5, 6, 7, 10],             // optionnel — tous les events par défaut
   httpHeaders: { "x-my-signature": "abc" }, // optionnel — headers ajoutés à chaque requête
 });
 
@@ -240,13 +244,25 @@ const isValid = verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
 
 ### `client.webhooks`
 
-| Méthode             | Description              |
-| ------------------- | ------------------------ |
-| `create(input)`     | Crée un `Webhook`        |
-| `get(id)`           | Récupère un `Webhook`    |
-| `list(params?)`     | Liste les webhooks       |
-| `update(id, input)` | Met à jour un `Webhook`  |
-| `delete(id)`        | Supprime un webhook      |
+| Méthode              | Description                                            |
+| -------------------- | ------------------------------------------------------ |
+| `create(input)`      | Crée un `Webhook`                                      |
+| `get(id)`            | Récupère un `Webhook`                                  |
+| `list(params?)`      | Liste les webhooks                                     |
+| `update(id, input)`  | Met à jour un `Webhook`                                |
+| `delete(id)`         | Supprime un webhook                                    |
+| `listEventTypes()`   | Retourne `{ id, name }[]` — types d'événements disponibles |
+
+**Champs de `CreateWebhookInput` / `UpdateWebhookInput` :**
+
+| Champ             | Type                     | Description                                      |
+| ----------------- | ------------------------ | ------------------------------------------------ |
+| `url`             | `string`                 | URL de destination                               |
+| `enabled`         | `boolean`                | Activer/désactiver                               |
+| `sslVerify`       | `boolean`                | Vérification SSL                                 |
+| `disableOnError`  | `boolean`                | Désactivation automatique après échec            |
+| `eventTypeIds`    | `number[]`               | IDs des événements à recevoir (tous par défaut)  |
+| `httpHeaders`     | `Record<string, string>` | Headers personnalisés ajoutés à chaque requête   |
 
 ### `client.balances`
 
