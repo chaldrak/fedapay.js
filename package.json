@@ -1,6 +1,6 @@
 {
   "name": "fedapay.js",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Zero-dependency TypeScript wrapper for the FedaPay API",
   "keywords": [
     "fedapay",
