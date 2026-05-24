@@ -19,15 +19,16 @@ import { FedaPayClient } from "fedapay.js";
 const client = new FedaPayClient({
   secretKey: "sk_live_xxxx",
   environment: "live", // "sandbox" par défaut
-  webhookSecret: "whsec_xxxx", // optionnel, requis pour les webhooks
+  webhookSecret: "whsec_xxxx", // optionnel, requis pour vérifier les signatures
 });
 ```
 
+---
+
 ### Transactions
 
-#### Créer une transaction
-
 ```ts
+// Créer
 const { transactionId, paymentUrl } = await client.transactions.create({
   amount: 5000,
   currency: "XOF", // par défaut
@@ -39,37 +40,136 @@ const { transactionId, paymentUrl } = await client.transactions.create({
   metadata: { orderId: "42" },
 });
 
-// Rediriger le client vers paymentUrl pour effectuer le paiement
-```
+// Récupérer
+const tx = await client.transactions.get(transactionId);
+console.log(tx.status); // "pending" | "approved" | "declined" | ...
 
-#### Récupérer une transaction
-
-```ts
-const transaction = await client.transactions.get(transactionId);
-
-console.log(transaction.status);    // "pending" | "approved" | "declined" | ...
-console.log(transaction.paymentUrl);
-```
-
-#### Lister les transactions
-
-```ts
+// Lister
 const { transactions, meta } = await client.transactions.list({ page: 1, perPage: 25 });
 
-console.log(`${meta.total} transactions — page ${meta.currentPage}/${meta.totalPages}`);
-
-for (const tx of transactions) {
-  console.log(tx.id, tx.status, tx.amount);
-}
-```
-
-#### Générer un lien de paiement (token)
-
-Utile pour générer un nouveau lien sur une transaction existante.
-
-```ts
+// Générer un lien de paiement sur une transaction existante
 const { token, paymentUrl } = await client.transactions.createPaymentToken(transactionId);
 ```
+
+---
+
+### Customers
+
+```ts
+// Créer
+const customer = await client.customers.create({
+  firstname: "Jean",
+  lastname: "Dupont",
+  email: "jean@example.com",
+  phoneNumber: { number: "90090909", country: "bj" },
+});
+
+// Récupérer
+const customer = await client.customers.get(customerId);
+
+// Lister
+const { customers, meta } = await client.customers.list({ page: 1, perPage: 25 });
+
+// Mettre à jour
+const updated = await client.customers.update(customerId, { lastname: "Martin" });
+
+// Supprimer
+await client.customers.delete(customerId);
+```
+
+---
+
+### Payouts (dépôts Mobile Money)
+
+```ts
+// Créer un payout (customer existant)
+const payout = await client.payouts.create({
+  amount: 10000,
+  currency: "XOF",
+  mode: "mtn_open", // mtn_open | moov | wave_ci | orange_ci | ...
+  customer: { id: customerId },
+});
+
+// Créer un payout (nouveau customer)
+const payout = await client.payouts.create({
+  amount: 10000,
+  mode: "moov",
+  customer: { email: "client@example.com", firstname: "Jean", lastname: "Dupont" },
+  merchantReference: "order_42",
+});
+
+// Envoyer immédiatement
+await client.payouts.send([{ id: payout.id }]);
+
+// Envoyer plusieurs, certains programmés
+await client.payouts.send([
+  { id: 10 },
+  { id: 11, scheduledAt: "2026-06-01T08:00:00Z" },
+]);
+
+// Récupérer
+const payout = await client.payouts.get(payoutId);
+console.log(payout.status); // "pending" | "scheduled" | "sent" | "failed" | ...
+
+// Lister
+const { payouts, meta } = await client.payouts.list({ page: 1, perPage: 25 });
+```
+
+---
+
+### Webhooks
+
+```ts
+// Créer
+const webhook = await client.webhooks.create({
+  url: "https://monsite.com/webhook",
+  enabled: true,
+  sslVerify: true,
+  disableOnError: false,
+  eventTypeIds: [5, 6, 7, 10],            // optionnel — tous les events par défaut
+  httpHeaders: { "x-my-signature": "abc" }, // optionnel — headers ajoutés à chaque requête
+});
+
+// Récupérer
+const webhook = await client.webhooks.get(webhookId);
+
+// Lister
+const { webhooks, meta } = await client.webhooks.list();
+
+// Mettre à jour
+const updated = await client.webhooks.update(webhookId, { enabled: false });
+
+// Supprimer
+await client.webhooks.delete(webhookId);
+```
+
+---
+
+### Balances
+
+```ts
+// Récupérer une balance
+const balance = await client.balances.get(balanceId);
+console.log(balance.amount, balance.mode);
+
+// Lister toutes les balances
+const { balances } = await client.balances.list();
+```
+
+---
+
+### Events
+
+```ts
+// Récupérer un événement
+const event = await client.events.get(eventId);
+console.log(event.type); // "transaction.approved" | ...
+
+// Lister les événements
+const { events, meta } = await client.events.list({ page: 1, perPage: 25 });
+```
+
+---
 
 ### Vérifier la signature d'un webhook
 
@@ -81,22 +181,22 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
     req.headers["x-fedapay-signature"] as string,
   );
 
-  if (!isValid) {
-    return res.status(400).send("Signature invalide");
-  }
+  if (!isValid) return res.status(400).send("Signature invalide");
 
   // Traiter l'événement…
   res.json({ received: true });
 });
 ```
 
-Vous pouvez aussi utiliser `verifyWebhookSignature` directement sans instancier un client :
+Utilisation sans client :
 
 ```ts
 import { verifyWebhookSignature } from "fedapay.js";
 
 const isValid = verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
 ```
+
+---
 
 ## API
 
@@ -106,52 +206,61 @@ const isValid = verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
 | --------------- | --------------------- | ------ | ----------------------------------- |
 | `secretKey`     | `string`              | Oui    | Clé secrète FedaPay (`sk_live_...`) |
 | `environment`   | `"sandbox" \| "live"` | Non    | `"sandbox"` par défaut              |
-| `webhookSecret` | `string`              | Non    | Secret pour valider les webhooks    |
+| `webhookSecret` | `string`              | Non    | Secret pour valider les signatures  |
 
-### `client.transactions.create(input)`
+### `client.transactions`
 
-| Paramètre           | Type                     | Requis | Description                   |
-| ------------------- | ------------------------ | ------ | ----------------------------- |
-| `amount`            | `number`                 | Oui    | Montant en centimes           |
-| `description`       | `string`                 | Oui    | Description de la transaction |
-| `callbackUrl`       | `string`                 | Oui    | URL de retour après paiement  |
-| `currency`          | `string`                 | Non    | `"XOF"` par défaut            |
-| `customerEmail`     | `string`                 | Non    | Email du client               |
-| `customerFirstName` | `string`                 | Non    | Prénom du client              |
-| `customerLastName`  | `string`                 | Non    | Nom du client                 |
-| `metadata`          | `Record<string, string>` | Non    | Données arbitraires           |
+| Méthode                       | Description                                      |
+| ----------------------------- | ------------------------------------------------ |
+| `create(input)`               | Crée une transaction, retourne `{ transactionId, paymentUrl }` |
+| `get(id)`                     | Récupère une `Transaction`                       |
+| `list(params?)`               | Liste les transactions, retourne `{ transactions, meta }` |
+| `createPaymentToken(id)`      | Génère un token de paiement, retourne `{ token, paymentUrl }` |
 
-Retourne `{ transactionId: string, paymentUrl: string }`.
+### `client.customers`
 
-### `client.transactions.get(id)`
+| Méthode           | Description                        |
+| ----------------- | ---------------------------------- |
+| `create(input)`   | Crée un `Customer`                 |
+| `get(id)`         | Récupère un `Customer`             |
+| `list(params?)`   | Liste les customers                |
+| `update(id, input)` | Met à jour un `Customer`         |
+| `delete(id)`      | Supprime un customer               |
 
-Récupère une transaction par son ID. Retourne un objet `Transaction` :
+### `client.payouts`
 
-| Champ         | Type                | Description                                                                         |
-| ------------- | ------------------- | ----------------------------------------------------------------------------------- |
-| `id`          | `number`            | Identifiant unique                                                                  |
-| `reference`   | `string`            | Référence FedaPay                                                                   |
-| `amount`      | `number`            | Montant                                                                             |
-| `status`      | `TransactionStatus` | `pending` \| `approved` \| `declined` \| `canceled` \| `refunded` \| `transferred` |
-| `description` | `string`            | Description                                                                         |
-| `callbackUrl` | `string \| null`    | URL de retour                                                                       |
-| `paymentUrl`  | `string \| null`    | Lien de paiement                                                                    |
-| `mode`        | `string \| null`    | Méthode de paiement utilisée                                                        |
-| `createdAt`   | `string`            | Date de création (ISO 8601)                                                         |
-| `updatedAt`   | `string`            | Date de mise à jour (ISO 8601)                                                      |
+| Méthode           | Description                                              |
+| ----------------- | -------------------------------------------------------- |
+| `create(input)`   | Crée un `Payout`                                         |
+| `get(id)`         | Récupère un `Payout`                                     |
+| `list(params?)`   | Liste les payouts                                        |
+| `send(items)`     | Déclenche l'envoi — `items: { id, scheduledAt? }[]`     |
 
-### `client.transactions.list(params?)`
+**Modes supportés :** `mtn_open`, `moov`, `mtn_ci`, `moov_tg`, `togocel`, `wave_ci`, `orange_ci`, `wave_sn`, `orange_sn`, `orange_bf`, `moov_bf`, `mtn_open_gn`, `moov_ci`
 
-| Paramètre | Type     | Description                      |
-| --------- | -------- | -------------------------------- |
-| `page`    | `number` | Numéro de page (défaut : 1)      |
-| `perPage` | `number` | Résultats par page (défaut : 25) |
+### `client.webhooks`
 
-Retourne `{ transactions: Transaction[], meta: ListMeta }` avec `meta` contenant `total`, `perPage`, `currentPage`, `totalPages`.
+| Méthode             | Description              |
+| ------------------- | ------------------------ |
+| `create(input)`     | Crée un `Webhook`        |
+| `get(id)`           | Récupère un `Webhook`    |
+| `list(params?)`     | Liste les webhooks       |
+| `update(id, input)` | Met à jour un `Webhook`  |
+| `delete(id)`        | Supprime un webhook      |
 
-### `client.transactions.createPaymentToken(id)`
+### `client.balances`
 
-Génère un token de paiement pour une transaction existante. Retourne `{ token: string, paymentUrl: string }`.
+| Méthode     | Description              |
+| ----------- | ------------------------ |
+| `get(id)`   | Récupère une `Balance`   |
+| `list()`    | Liste toutes les balances |
+
+### `client.events`
+
+| Méthode       | Description            |
+| ------------- | ---------------------- |
+| `get(id)`     | Récupère un `Event`    |
+| `list(params?)` | Liste les événements |
 
 ### `client.verifyWebhookSignature(rawBody, header)`
 

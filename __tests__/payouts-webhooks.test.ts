@@ -36,6 +36,8 @@ const WEBHOOK_RAW = {
   enabled: true,
   ssl_verify: true,
   disable_on_error: false,
+  event_type_ids: [5, 6, 7],
+  http_headers: { "x-signature": "abc" },
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
 };
@@ -170,6 +172,8 @@ describe("FedaPayClient — webhooks.create", () => {
     expect(webhook.url).toBe("https://monsite.com/webhook");
     expect(webhook.sslVerify).toBe(true);
     expect(webhook.disableOnError).toBe(false);
+    expect(webhook.eventTypeIds).toEqual([5, 6, 7]);
+    expect(webhook.httpHeaders).toEqual({ "x-signature": "abc" });
   });
 
   it("lève une erreur si la réponse est inattendue", async () => {
@@ -237,5 +241,39 @@ describe("FedaPayClient — webhooks.delete", () => {
 
     const client = new FedaPayClient({ secretKey: "sk_test_123" });
     await expect(client.webhooks.delete(7)).resolves.toBeUndefined();
+  });
+});
+
+describe("FedaPayClient — webhooks.listEventTypes", () => {
+  beforeEach(() => { mockFetch.mockClear(); });
+
+  it("retourne la liste des types d'événements", async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockResponse({
+        "v1/event_types": [
+          { id: 5, name: "transaction.approved" },
+          { id: 6, name: "transaction.declined" },
+          { id: 7, name: "transaction.canceled" },
+          { id: 10, name: "customer.created" },
+        ],
+      }),
+    );
+
+    const client = new FedaPayClient({ secretKey: "sk_test_123" });
+    const types = await client.webhooks.listEventTypes();
+
+    expect(types).toHaveLength(4);
+    expect(types[0]).toEqual({ id: 5, name: "transaction.approved" });
+    expect(types[3]).toEqual({ id: 10, name: "customer.created" });
+  });
+
+  it("appelle /event_types", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse({ "v1/event_types": [] }));
+
+    const client = new FedaPayClient({ secretKey: "sk_test_123" });
+    await client.webhooks.listEventTypes();
+
+    const url = (mockFetch.mock.calls[0] as [string])[0];
+    expect(url).toContain("/event_types");
   });
 });

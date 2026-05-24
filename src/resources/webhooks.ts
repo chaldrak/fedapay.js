@@ -1,6 +1,8 @@
 import type {
   CreateWebhookInput,
   UpdateWebhookInput,
+  EventType,
+  FedaPayEventTypeResponse,
   FedaPayWebhookResponse,
   ListWebhooksParams,
   ListWebhooksResult,
@@ -17,6 +19,8 @@ function toWebhook(w: FedaPayWebhookResponse): Webhook {
     enabled: w.enabled,
     sslVerify: w.ssl_verify,
     disableOnError: w.disable_on_error,
+    eventTypeIds: w.event_type_ids ?? [],
+    httpHeaders: w.http_headers ?? {},
     createdAt: w.created_at,
     updatedAt: w.updated_at,
   };
@@ -35,6 +39,8 @@ function buildBody(input: CreateWebhookInput | UpdateWebhookInput): Record<strin
   if (input.enabled !== undefined) body.enabled = input.enabled;
   if (input.sslVerify !== undefined) body.ssl_verify = input.sslVerify;
   if (input.disableOnError !== undefined) body.disable_on_error = input.disableOnError;
+  if (input.eventTypeIds !== undefined) body.event_type_ids = input.eventTypeIds;
+  if (input.httpHeaders !== undefined) body.http_headers = input.httpHeaders;
   return body;
 }
 
@@ -128,5 +134,23 @@ export class WebhooksResource {
 
   async delete(id: number | string): Promise<void> {
     await this.#request(`/webhooks/${id}`, { method: "DELETE" });
+  }
+
+  async listEventTypes(): Promise<EventType[]> {
+    const data = await this.#request("/event_types");
+
+    const types = (
+      data["v1/event_types"] ??
+      (data.v1 as Record<string, unknown> | undefined)?.event_types ??
+      data.event_types
+    ) as FedaPayEventTypeResponse[] | undefined;
+
+    if (!Array.isArray(types)) {
+      throw new Error(
+        `FedaPay webhooks.listEventTypes: unexpected response — ${JSON.stringify(data)}`,
+      );
+    }
+
+    return types.map((t) => ({ id: t.id, name: t.name }));
   }
 }

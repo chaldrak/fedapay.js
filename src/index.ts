@@ -28,6 +28,7 @@ export type {
   Payout,
   ListPayoutsParams,
   ListPayoutsResult,
+  EventType,
   CreateWebhookInput,
   UpdateWebhookInput,
   Webhook,

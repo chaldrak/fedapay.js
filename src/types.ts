@@ -236,11 +236,20 @@ export interface ListPayoutsResult {
   meta: ListMeta;
 }
 
+export interface EventType {
+  id: number;
+  name: string;
+}
+
 export interface CreateWebhookInput {
   url: string;
   enabled?: boolean;
   sslVerify?: boolean;
   disableOnError?: boolean;
+  /** IDs des types d'événements à recevoir (tous par défaut) */
+  eventTypeIds?: number[];
+  /** Headers HTTP personnalisés ajoutés à chaque requête webhook */
+  httpHeaders?: Record<string, string>;
 }
 
 export interface UpdateWebhookInput {
@@ -248,6 +257,8 @@ export interface UpdateWebhookInput {
   enabled?: boolean;
   sslVerify?: boolean;
   disableOnError?: boolean;
+  eventTypeIds?: number[];
+  httpHeaders?: Record<string, string>;
 }
 
 export interface Webhook {
@@ -256,6 +267,8 @@ export interface Webhook {
   enabled: boolean;
   sslVerify: boolean;
   disableOnError: boolean;
+  eventTypeIds: number[];
+  httpHeaders: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
@@ -290,12 +303,20 @@ export interface FedaPayPayoutResponse {
 }
 
 /** @internal */
+export interface FedaPayEventTypeResponse {
+  id: number;
+  name: string;
+}
+
+/** @internal */
 export interface FedaPayWebhookResponse {
   id: number;
   url: string;
   enabled: boolean;
   ssl_verify: boolean;
   disable_on_error: boolean;
+  event_type_ids: number[];
+  http_headers: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
