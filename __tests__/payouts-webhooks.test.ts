@@ -36,7 +36,10 @@ const WEBHOOK_RAW = {
   enabled: true,
   ssl_verify: true,
   disable_on_error: false,
-  event_type_ids: [5, 6, 7],
+  event_types: [
+    { klass: "v1/event_type", id: 5, name: "transaction.approved", created_at: "2018-05-27T21:26:23.835Z", updated_at: "2018-05-27T21:26:23.835Z" },
+    { klass: "v1/event_type", id: 1, name: "customer.created", created_at: "2018-05-27T21:26:23.800Z", updated_at: "2018-05-27T21:26:23.800Z" },
+  ],
   http_headers: { "x-signature": "abc" },
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
@@ -172,7 +175,10 @@ describe("FedaPayClient — webhooks.create", () => {
     expect(webhook.url).toBe("https://monsite.com/webhook");
     expect(webhook.sslVerify).toBe(true);
     expect(webhook.disableOnError).toBe(false);
-    expect(webhook.eventTypeIds).toEqual([5, 6, 7]);
+    expect(webhook.eventTypes).toEqual([
+      { id: 5, name: "transaction.approved" },
+      { id: 1, name: "customer.created" },
+    ]);
     expect(webhook.httpHeaders).toEqual({ "x-signature": "abc" });
   });
 

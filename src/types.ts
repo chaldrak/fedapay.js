@@ -267,7 +267,7 @@ export interface Webhook {
   enabled: boolean;
   sslVerify: boolean;
   disableOnError: boolean;
-  eventTypeIds: number[];
+  eventTypes: EventType[];
   httpHeaders: Record<string, string>;
   createdAt: string;
   updatedAt: string;
@@ -315,7 +315,7 @@ export interface FedaPayWebhookResponse {
   enabled: boolean;
   ssl_verify: boolean;
   disable_on_error: boolean;
-  event_type_ids: number[];
+  event_types: FedaPayEventTypeResponse[];
   http_headers: Record<string, string>;
   created_at: string;
   updated_at: string;

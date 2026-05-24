@@ -19,7 +19,7 @@ function toWebhook(w: FedaPayWebhookResponse): Webhook {
     enabled: w.enabled,
     sslVerify: w.ssl_verify,
     disableOnError: w.disable_on_error,
-    eventTypeIds: w.event_type_ids ?? [],
+    eventTypes: (w.event_types ?? []).map((t) => ({ id: t.id, name: t.name })),
     httpHeaders: w.http_headers ?? {},
     createdAt: w.created_at,
     updatedAt: w.updated_at,
